@@ -1,6 +1,7 @@
 package pt.rikmartins.clubemg.utilitarios.noticias;
 
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import pt.rikmartins.utilitarios.noticias.SitioNoticias;
 
 import java.net.MalformedURLException;
@@ -23,5 +24,19 @@ public class SitioNoticiasClubeMG extends SitioNoticias{
             assert false;
         }
         return null; // Inatingível
+    }
+
+    /**
+     * Created by ricardo on 01-12-2014.
+     */
+    public static class NoticiaClubeMG extends Noticia {
+        public NoticiaClubeMG(Element html, URL enderecoGlobal) {
+            super(html, enderecoGlobal);
+        }
+
+        @Override
+        protected Noticia preparaNoticia(Element html) {
+            return null;
+        }
     }
 }

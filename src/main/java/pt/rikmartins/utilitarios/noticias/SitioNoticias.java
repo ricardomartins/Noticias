@@ -1,9 +1,12 @@
 package pt.rikmartins.utilitarios.noticias;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -11,6 +14,15 @@ import org.jsoup.nodes.Element;
 
 public abstract class SitioNoticias {
 	private List<Noticia> noticias;
+	private URL enderecoAlternativo;
+
+	public SitioNoticias() {
+		enderecoAlternativo = null;
+	}
+
+	public SitioNoticias(URL enderecoAlternativo) {
+		this.enderecoAlternativo = enderecoAlternativo;
+	}
 
 	/**
 	 * Função chamada após obtenção da página, deve implementar o preenchimento
@@ -22,7 +34,15 @@ public abstract class SitioNoticias {
 	 */
 	protected abstract ClasseEElemento[] processarSitioNoticias(Document pagina);
 
-	public abstract URL getEndereco();
+	public URL getEndereco(){
+		return enderecoAlternativo != null ? enderecoAlternativo : getEnderecoOriginal();
+	}
+
+	public URL getEnderecoAlternativo(){
+		return enderecoAlternativo;
+	}
+
+	public abstract URL getEnderecoOriginal();
 
 	public boolean actualizarNoticias(boolean forcarActualizacao){
 		if (estaPreenchido() && !forcarActualizacao) return false;
@@ -88,4 +108,59 @@ public abstract class SitioNoticias {
 			this.elementoNoticia = elementoNoticia;
 		}
 	}
+
+	public abstract static class Noticia {
+        protected Boolean valida = false;
+
+        protected URL enderecoDoSitio;
+
+        protected String titulo;
+        protected String subtitulo;
+        protected String texto;
+        protected URI enderecoNoticia;  // endereço relativo para já
+        protected URI enderecoImagem;  // endereço relativo para já
+		protected byte[] imagem;
+        protected Set<String> etiquetas;
+
+        public Noticia(Element html, URL enderecoGlobal) {
+            this.enderecoDoSitio = enderecoGlobal;
+            preparaNoticia(html);
+            this.valida = true;
+            this.etiquetas = new HashSet<String>();
+        }
+
+        protected abstract Noticia preparaNoticia(Element html);
+
+        public Boolean getValida() {
+            return this.valida;
+        }
+
+        public URL getEnderecoDoSitio() {
+            return this.enderecoDoSitio;
+        }
+
+        public String getTitulo() {
+            return this.titulo;
+        }
+
+        public String getSubtitulo() {
+            return this.subtitulo;
+        }
+
+        public URI getEnderecoNoticia() {
+            return this.enderecoNoticia;
+        }
+
+        public URI getEnderecoImagem() {
+            return this.enderecoImagem;
+        }
+
+        public String getTexto() {
+            return this.texto;
+        }
+
+        public Set<String> getEtiquetas() {
+            return etiquetas;
+        }
+    }
 }
