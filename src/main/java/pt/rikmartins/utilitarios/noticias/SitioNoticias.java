@@ -1,106 +1,91 @@
 package pt.rikmartins.utilitarios.noticias;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 public abstract class SitioNoticias {
-	private Map<String, List<Noticia>> asCategorias;
-	private String categoriaActiva;
+	private List<Noticia> noticias;
 
 	/**
 	 * Função chamada após obtenção da página, deve implementar o preenchimento
-	 * do atributo <code>asCategorias</code>.
-	 * 
+	 * do atributo <code>noticias</code>.
+	 *
 	 * @param pagina
 	 *            <code>Document</code> que contém a totalidade da página obtida
 	 *            da internet
 	 */
-	public abstract void processarSitioNoticias(Document pagina);
+	protected abstract ClasseEElemento[] processarSitioNoticias(Document pagina);
 
-	public abstract URL getEndereco(); 
+	public abstract URL getEndereco();
 
-	public final SitioNoticias adicionarCategoria(String nomeCategoria) {
-		List<Noticia> aNovaLista = new ArrayList<Noticia>();
-		asCategorias.put(nomeCategoria, aNovaLista);
+	public boolean actualizarNoticias(boolean forcarActualizacao){
+		if (estaPreenchido() && !forcarActualizacao) return false;
 
-		categoriaActiva = nomeCategoria;
-		return this;
-	}
+		Document pagina = obterPagina(forcarActualizacao);
+		if (pagina == null) return false;
 
-	public final SitioNoticias renomearCategoria(String nomeCategoria,
-			String novoNome) {
-		List<Noticia> aLista = asCategorias.get(nomeCategoria);
-		asCategorias.put(novoNome, aLista);
+		ClasseEElemento[] elementosNoticia = processarSitioNoticias(pagina);
+		if (elementosNoticia == null) return false;
 
-		categoriaActiva = novoNome;
-		return this;
-	}
+		List<Noticia> noticias = new ArrayList<Noticia>();
+		for (ClasseEElemento classeEElemento : elementosNoticia){
+			if (classeEElemento == null) break;
 
-	public final SitioNoticias renomearCategoria(String novoNome) {
-		return renomearCategoria(categoriaActiva, novoNome);
-	}
-
-	public final SitioNoticias removerCategoria(String categoria) {
-		asCategorias.remove(categoria);
-
-		return this;
-	}
-
-	public final SitioNoticias adicionarNoticia(String categoria,
-			Noticia noticia) {
-		if(!asCategorias.containsKey(categoria)){
-			adicionarCategoria(categoria);
+			try {
+				this.noticias.add(classeEElemento.classeNoticia.getConstructor(Noticia.class, URL.class).newInstance(classeEElemento.elementoNoticia, getEndereco()));
+			} catch (ReflectiveOperationException e) {
+				e.printStackTrace();
+				return false;
+			}
 		}
-		asCategorias.get(categoria).add(noticia);
 
-		categoriaActiva = categoria;
-		return this;
+		this.noticias = noticias;
+		return true;
 	}
 
-	public final SitioNoticias adicionarNoticia(Noticia noticia) {
-		return adicionarNoticia(categoriaActiva, noticia);
+	public final boolean actualizarNoticias() {
+		return actualizarNoticias(false);
 	}
 
-	public final SitioNoticias removerNoticia(String categoria, Noticia noticia) {
-		asCategorias.get(categoria).remove(noticia);
-
-		categoriaActiva = categoria;
-		return this;
+	private Document obterPagina(boolean forcarActualizacao) {
+		Document pagina;
+		try {
+			pagina = Jsoup.connect(getEndereco().toExternalForm()).get();
+		} catch (IOException e) {
+			e.printStackTrace();
+			pagina = null;
+		}
+		return pagina;
 	}
 
-	public final SitioNoticias removerNoticia(Noticia noticia) {
-		return removerNoticia(categoriaActiva, noticia);
+	public final void adicionarNoticia(Noticia noticia) {
+		noticias.add(noticia);
 	}
 
-	public final SitioNoticias removerNoticia(String categoria,
-			int indiceNoticia) {
-		asCategorias.get(categoria).remove(indiceNoticia);
-
-		categoriaActiva = categoria;
-		return this;
+	public final void removerNoticia(Noticia noticia) {
+		noticias.remove(noticia);
 	}
 
-	public final SitioNoticias removerNoticia(int indiceNoticia) {
-		return removerNoticia(categoriaActiva, indiceNoticia);
-	}
-
-	public final List<Noticia> getListaNoticias(String categoria) {
-		return asCategorias.get(categoria);
+	public final List<Noticia> getNoticias() {
+		return noticias;
 	}
 
 	public final boolean estaPreenchido() {
-		if (asCategorias == null || asCategorias.isEmpty()) {
-			return false;
+		return !(noticias == null || noticias.isEmpty());
+	}
+
+	protected static class ClasseEElemento {
+		public Class<? extends Noticia> classeNoticia;
+		public Element elementoNoticia;
+		public ClasseEElemento(Class<? extends Noticia> classeNoticia, Element elementoNoticia){
+			this.classeNoticia = classeNoticia;
+			this.elementoNoticia = elementoNoticia;
 		}
-		for (List<Noticia> lNoticias : asCategorias.values()) {
-			if (!lNoticias.isEmpty()) {
-				return true;
-			}
-		}
-		return false;
 	}
 }

@@ -2,66 +2,61 @@ package pt.rikmartins.utilitarios.noticias;
 
 import org.jsoup.nodes.Element;
 
+import java.net.URI;
+import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
+
 public abstract class Noticia {
 	protected Boolean valida = false;
 
-	protected String enderecoDoSitio = "";
+	protected URL enderecoDoSitio;
 
-	protected String original = "";
-	protected String titulo = ""; 
-	protected String subtitulo = "";
-	protected String texto = "";
-	protected String enderecoNoticia = "";  // endereço relativo para já
-	protected String enderecoImagem = "";  // endereço relativo para já
+	protected String titulo;
+	protected String subtitulo;
+	protected String texto;
+	protected URI enderecoNoticia;  // endereço relativo para já
+	protected URI enderecoImagem;  // endereço relativo para já
+	protected Set<String> etiquetas;
 	
-	public Noticia() {
-	}
-
-	public Noticia(Element html) {
-		preparaNoticia(html);
-		this.valida = true;
-	}
-
-	public Noticia(Element html, String enderecoGlobal) {
+	public Noticia(Element html, URL enderecoGlobal) {
 		this.enderecoDoSitio = enderecoGlobal;
 		preparaNoticia(html);
 		this.valida = true;
-
+		this.etiquetas = new HashSet<String>();
 	}
 
-	public abstract Noticia preparaNoticia(Element html);
+	protected abstract Noticia preparaNoticia(Element html);
 
-	// Obtensores directos
-	public String obterOriginal() {
-		return this.original;
-	}
-
-	public Boolean obterValida() {
+	public Boolean getValida() {
 		return this.valida;
 	}
 
-	public String obterEnderecoDoSitio() {
+	public URL getEnderecoDoSitio() {
 		return this.enderecoDoSitio;
 	}
 
-	public String obterTitulo() {
+	public String getTitulo() {
 		return this.titulo;
 	}
 
-	public String obterSubtitulo() {
+	public String getSubtitulo() {
 		return this.subtitulo;
 	}
 
-	public String obterEnderecoNoticia() {
+	public URI getEnderecoNoticia() {
 		return this.enderecoNoticia;
 	}
 
-	public String obterEnderecoImagem() {
+	public URI getEnderecoImagem() {
 		return this.enderecoImagem;
 	}
 
-	public String obterTexto() {
+	public String getTexto() {
 		return this.texto;
 	}
 
+	public Set<String> getEtiquetas() {
+		return etiquetas;
+	}
 }
