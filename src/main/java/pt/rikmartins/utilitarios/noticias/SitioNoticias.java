@@ -17,6 +17,8 @@ import org.jsoup.nodes.Element;
 public abstract class SitioNoticias {
     private List<Noticia> noticias;
     private URL enderecoAlternativo;
+    private Set<String> etiquetas;
+    private Set<String> categorias;
 
     private static Document obterPagina(URL endereco, boolean forcarActualizacao) {
         Document pagina;
@@ -30,11 +32,14 @@ public abstract class SitioNoticias {
     }
 
     public SitioNoticias() {
-        enderecoAlternativo = null;
+        this(null);
     }
 
     public SitioNoticias(URL enderecoAlternativo) {
         this.enderecoAlternativo = enderecoAlternativo;
+        this.noticias = new ArrayList<>();
+        this.etiquetas = new HashSet<>();
+        this.categorias = new HashSet<>();
     }
 
     /**
@@ -65,19 +70,20 @@ public abstract class SitioNoticias {
         ClasseEElemento[] elementosNoticia = processarSitioNoticias(pagina);
         if (elementosNoticia == null) return false;
 
-        List<Noticia> noticias = new ArrayList<Noticia>();
+        List<Noticia> noticias = new ArrayList<>();
         for (ClasseEElemento classeEElemento : elementosNoticia) {
-            if (classeEElemento == null) break;
+            if (classeEElemento == null) return false;
 
             try {
-                adicionarNoticia(classeEElemento.classeNoticia.getConstructor(Noticia.class, URL.class).newInstance(classeEElemento.elementoNoticia, getEndereco()));
+                noticias.add(classeEElemento.classeNoticia.getConstructor(Element.class, SitioNoticias.class).newInstance(classeEElemento.elementoNoticia, this));
             } catch (ReflectiveOperationException e) {
                 e.printStackTrace();
                 return false;
             }
         }
 
-        this.noticias = noticias;
+        for (Noticia noticia : noticias)
+            adicionarNoticia(noticia);
         return true;
     }
 
@@ -85,8 +91,10 @@ public abstract class SitioNoticias {
         return actualizarNoticias(false);
     }
 
-    public final void adicionarNoticia(Noticia noticia) {
-        noticias.add(noticia);
+    protected final void adicionarNoticia(Noticia noticia) {
+        this.noticias.add(noticia);
+        this.etiquetas.addAll(noticia.etiquetas);
+        this.categorias.add(noticia.categoria);
     }
 
     public final void removerNoticia(Noticia noticia) {
@@ -95,6 +103,14 @@ public abstract class SitioNoticias {
 
     public final List<Noticia> getNoticias() {
         return noticias;
+    }
+
+    public Set<String> getEtiquetas() {
+        return etiquetas;
+    }
+
+    public Set<String> getCategorias() {
+        return categorias;
     }
 
     public final boolean estaPreenchido() {
@@ -112,10 +128,9 @@ public abstract class SitioNoticias {
     }
 
     public abstract static class Noticia {
-        protected Boolean valida = false;
-
         protected SitioNoticias sitioNoticias;
 
+        protected String identificacaoNoticia;
         protected String titulo;
         protected String subtitulo;
         protected String texto;
@@ -123,38 +138,44 @@ public abstract class SitioNoticias {
         protected URL enderecoImagem;
         protected byte[] imagem;
         protected Set<String> etiquetas;
+        protected String categoria;
+        protected boolean destacada;
 
         public Noticia(Element elemento, SitioNoticias sitioNoticias) {
             this.sitioNoticias = sitioNoticias;
-            coisocoiso(elemento);
-            this.valida = true;
             this.etiquetas = new HashSet<>();
+            this.destacada = false;
+            preparaNoticia(elemento);
         }
 
-        private static byte[] obterImagem(URL endereco) throws IOException {
+        public final void obterImagem(URL endereco) throws IOException {
             try (InputStream in = new BufferedInputStream(endereco.openStream());
                  ByteArrayOutputStream out = new ByteArrayOutputStream()) {
                 byte[] buf = new byte[1024];
                 int n = 0;
                 while (-1 != (n = in.read(buf))) out.write(buf, 0, n);
-                return out.toByteArray();
+                this.imagem = out.toByteArray();
             }
         }
 
-        private void coisocoiso(Element elemento){
-            preparaNoticia(elemento);
-            if (this.enderecoImagem != null)
+        private void preparaNoticia(Element elemento, boolean obterImagens){
+            extraiNoticia(elemento);
+            if (obterImagens && this.enderecoImagem != null)
                 try {
-                    this.imagem = obterImagem(enderecoImagem);
+                    obterImagem(enderecoImagem);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
         }
 
-        protected abstract void preparaNoticia(Element elemento);
+        private void preparaNoticia(Element elemento){
+            preparaNoticia(elemento, false);
+        }
 
-        public final Boolean getValida() {
-            return this.valida;
+        protected abstract void extraiNoticia(Element elemento);
+
+        public final String getIdentificacaoNoticia() {
+            return identificacaoNoticia;
         }
 
         public final SitioNoticias getSitioNoticias() {
@@ -169,6 +190,10 @@ public abstract class SitioNoticias {
             return this.subtitulo;
         }
 
+        public final String getTexto() {
+            return this.texto;
+        }
+
         public final URL getEnderecoNoticia() {
             return this.enderecoNoticia;
         }
@@ -177,12 +202,20 @@ public abstract class SitioNoticias {
             return this.enderecoImagem;
         }
 
-        public final String getTexto() {
-            return this.texto;
+        public final byte[] getImagem() {
+            return imagem;
         }
 
         public final Set<String> getEtiquetas() {
             return etiquetas;
+        }
+
+        public final String getCategoria() {
+            return categoria;
+        }
+
+        public final boolean isDestacada() {
+            return destacada;
         }
     }
 }
