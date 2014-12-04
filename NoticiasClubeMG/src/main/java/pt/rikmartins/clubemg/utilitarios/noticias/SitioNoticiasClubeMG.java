@@ -8,7 +8,6 @@ import pt.rikmartins.utilitarios.noticias.SitioNoticias;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Set;
-import java.util.Stack;
 import java.util.StringTokenizer;
 
 /**
@@ -48,6 +47,8 @@ public class SitioNoticiasClubeMG extends SitioNoticias {
     }
 
     public static class NoticiaClubeMG extends Noticia {
+        protected URL enderecoImagemGrande;
+
         public NoticiaClubeMG(Element elemento, SitioNoticias sitioNoticias) {
             super(elemento, sitioNoticias);
         }
@@ -97,20 +98,10 @@ public class SitioNoticiasClubeMG extends SitioNoticias {
                 }
                 String corpo = corpoBuilder.toString();
 
-                switch (cabeca) {
-                    case "category":
-                        this.categoria = corpo;
-                        break;
-                    case "tag":
-                        this.etiquetas.add(corpo);
-                        break;
-                    case "featured":
-                        this.destacada = true;
-                        break;
-                    case "post":
-                        if (!corpo.equals(""))
-                            this.identificacaoNoticia = corpo;
-                }
+                if (cabeca.equals("category")) this.categoria = corpo;
+                else if (cabeca.equals("tag")) this.etiquetas.add(corpo);
+                else if (cabeca.equals("featured")) this.destacada = true;
+                else if (cabeca.equals("post") && !corpo.equals("")) this.identificacaoNoticia = corpo;
             }
 
             Element postwrap = elemento.child(0);
@@ -126,10 +117,15 @@ public class SitioNoticiasClubeMG extends SitioNoticias {
             }
 
             String enderecoImagemHtml = postwrap.getElementsByClass("thumbwrap").first().getElementsByTag("img").attr("src");
-            String enderecoImagem = enderecoImagemHtml.replaceAll("-\\d+x\\d+.", ".");
 
             try {
-                this.enderecoImagem = new URL(enderecoImagem);
+                this.enderecoImagemGrande = new URL(enderecoImagemHtml.replaceAll("-\\d+x\\d+.", "."));
+            } catch (MalformedURLException e) {
+                e.printStackTrace(); // TODO: Fazer algo com esta excepção, e tentar dar a volta com URI concatenado ao url do sítio
+            }
+
+            try {
+                this.enderecoImagem = new URL(enderecoImagemHtml);
             } catch (MalformedURLException e){
                 e.printStackTrace(); // TODO: Fazer algo com esta excepção, e tentar dar a volta com URI concatenado ao url do sítio
             }

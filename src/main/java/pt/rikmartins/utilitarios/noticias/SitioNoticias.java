@@ -37,9 +37,9 @@ public abstract class SitioNoticias {
 
     public SitioNoticias(URL enderecoAlternativo) {
         this.enderecoAlternativo = enderecoAlternativo;
-        this.noticias = new ArrayList<>();
-        this.etiquetas = new HashSet<>();
-        this.categorias = new HashSet<>();
+        this.noticias = new ArrayList<Noticia>();
+        this.etiquetas = new HashSet<String>();
+        this.categorias = new HashSet<String>();
     }
 
     /**
@@ -70,7 +70,7 @@ public abstract class SitioNoticias {
         ClasseEElemento[] elementosNoticia = processarSitioNoticias(pagina);
         if (elementosNoticia == null) return false;
 
-        List<Noticia> noticias = new ArrayList<>();
+        List<Noticia> noticias = new ArrayList<Noticia>();
         for (ClasseEElemento classeEElemento : elementosNoticia) {
             if (classeEElemento == null) return false;
 
@@ -143,19 +143,20 @@ public abstract class SitioNoticias {
 
         public Noticia(Element elemento, SitioNoticias sitioNoticias) {
             this.sitioNoticias = sitioNoticias;
-            this.etiquetas = new HashSet<>();
+            this.etiquetas = new HashSet<String>();
             this.destacada = false;
             preparaNoticia(elemento);
         }
 
         public final void obterImagem(URL endereco) throws IOException {
-            try (InputStream in = new BufferedInputStream(endereco.openStream());
-                 ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                byte[] buf = new byte[1024];
-                int n = 0;
-                while (-1 != (n = in.read(buf))) out.write(buf, 0, n);
-                this.imagem = out.toByteArray();
-            }
+            InputStream in = new BufferedInputStream(endereco.openStream());
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[1024];
+            int n = 0;
+            while (-1 != (n = in.read(buf))) out.write(buf, 0, n);
+            this.imagem = out.toByteArray();
+            out.close();
+            in.close();
         }
 
         private void preparaNoticia(Element elemento, boolean obterImagens){
