@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -76,8 +77,14 @@ public abstract class SitioNoticias {
 
             try {
                 noticias.add(classeEElemento.classeNoticia.getConstructor(Element.class, SitioNoticias.class).newInstance(classeEElemento.elementoNoticia, this));
-            } catch (ReflectiveOperationException e) {
+            } catch (NoSuchMethodException e) {
                 e.printStackTrace();
+                return false;
+            } catch (InvocationTargetException e) {
+                return false;
+            } catch (InstantiationException e) {
+                return false;
+            } catch (IllegalAccessException e) {
                 return false;
             }
         }
