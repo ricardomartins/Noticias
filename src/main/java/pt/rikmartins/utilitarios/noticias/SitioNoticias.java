@@ -1,9 +1,10 @@
 package pt.rikmartins.utilitarios.noticias;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -11,26 +12,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-
 public abstract class SitioNoticias {
     private List<Noticia> noticias;
-    private URL enderecoAlternativo;
-    private Set<String> etiquetas;
-    private Set<String> categorias;
-
-    private static Document obterPagina(URL endereco, boolean forcarActualizacao) {
-        Document pagina;
-        try {
-            pagina = Jsoup.connect(endereco.toExternalForm()).get();
-        } catch (IOException e) {
-            e.printStackTrace();
-            pagina = null;
-        }
-        return pagina;
-    }
+    private URL           enderecoAlternativo;
+    private Set<String>   etiquetas;
+    private Set<String>   categorias;
 
     public SitioNoticias() {
         this(null);
@@ -41,6 +27,17 @@ public abstract class SitioNoticias {
         this.noticias = new ArrayList<Noticia>();
         this.etiquetas = new HashSet<String>();
         this.categorias = new HashSet<String>();
+    }
+
+    private static Document obterPagina(URL endereco) {
+        Document pagina;
+        try {
+            pagina = Jsoup.connect(endereco.toExternalForm()).get();
+        } catch (IOException e) {
+            e.printStackTrace();
+            pagina = null;
+        }
+        return pagina;
     }
 
     /**
@@ -62,10 +59,8 @@ public abstract class SitioNoticias {
 
     public abstract URL getEnderecoOriginal();
 
-    public boolean actualizarNoticias(boolean forcarActualizacao) {
-        if (estaPreenchido() && !forcarActualizacao) return false;
-
-        Document pagina = obterPagina(getEndereco(), forcarActualizacao);
+    public boolean actualizarNoticias() {
+        Document pagina = obterPagina(getEndereco());
         if (pagina == null) return false;
 
         ClasseEElemento[] elementosNoticia = processarSitioNoticias(pagina);
@@ -76,7 +71,8 @@ public abstract class SitioNoticias {
             if (classeEElemento == null) return false;
 
             try {
-                noticias.add(classeEElemento.classeNoticia.getConstructor(Element.class, SitioNoticias.class).newInstance(classeEElemento.elementoNoticia, this));
+                noticias.add(classeEElemento.classeNoticia.getConstructor(Element.class, SitioNoticias.class)
+                                                          .newInstance(classeEElemento.elementoNoticia, this));
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
                 return false;
@@ -92,10 +88,6 @@ public abstract class SitioNoticias {
         for (Noticia noticia : noticias)
             adicionarNoticia(noticia);
         return true;
-    }
-
-    public final boolean actualizarNoticias() {
-        return actualizarNoticias(false);
     }
 
     protected final void adicionarNoticia(Noticia noticia) {
@@ -126,7 +118,7 @@ public abstract class SitioNoticias {
 
     protected final static class ClasseEElemento {
         public Class<? extends Noticia> classeNoticia;
-        public Element elementoNoticia;
+        public Element                  elementoNoticia;
 
         public ClasseEElemento(Class<? extends Noticia> classeNoticia, Element elementoNoticia) {
             this.classeNoticia = classeNoticia;
@@ -137,16 +129,15 @@ public abstract class SitioNoticias {
     public abstract static class Noticia {
         protected SitioNoticias sitioNoticias;
 
-        protected String identificacaoNoticia;
-        protected String titulo;
-        protected String subtitulo;
-        protected String texto;
-        protected URL enderecoNoticia;
-        protected URL enderecoImagem;
-        protected byte[] imagem;
+        protected String      identificacaoNoticia;
+        protected String      titulo;
+        protected String      subtitulo;
+        protected String      texto;
+        protected URL         enderecoNoticia;
+        protected URL         enderecoImagem;
         protected Set<String> etiquetas;
-        protected String categoria;
-        protected boolean destacada;
+        protected String      categoria;
+        protected boolean     destacada;
 
         public Noticia(Element elemento, SitioNoticias sitioNoticias) {
             this.sitioNoticias = sitioNoticias;
@@ -155,29 +146,8 @@ public abstract class SitioNoticias {
             preparaNoticia(elemento);
         }
 
-        public final void obterImagem(URL endereco) throws IOException {
-            InputStream in = new BufferedInputStream(endereco.openStream());
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buf = new byte[1024];
-            int n = 0;
-            while (-1 != (n = in.read(buf))) out.write(buf, 0, n);
-            this.imagem = out.toByteArray();
-            out.close();
-            in.close();
-        }
-
-        private void preparaNoticia(Element elemento, boolean obterImagens){
+        private void preparaNoticia(Element elemento) {
             extraiNoticia(elemento);
-            if (obterImagens && this.enderecoImagem != null)
-                try {
-                    obterImagem(enderecoImagem);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-        }
-
-        private void preparaNoticia(Element elemento){
-            preparaNoticia(elemento, false);
         }
 
         protected abstract void extraiNoticia(Element elemento);
@@ -208,10 +178,6 @@ public abstract class SitioNoticias {
 
         public final URL getEnderecoImagem() {
             return this.enderecoImagem;
-        }
-
-        public final byte[] getImagem() {
-            return imagem;
         }
 
         public final Set<String> getEtiquetas() {

@@ -130,5 +130,9 @@ public class SitioNoticiasClubeMG extends SitioNoticias {
                 e.printStackTrace(); // TODO: Fazer algo com esta excepção, e tentar dar a volta com URI concatenado ao url do sítio
             }
         }
+
+        public URL getEnderecoImagemGrande() {
+            return enderecoImagemGrande;
+        }
     }
 }
