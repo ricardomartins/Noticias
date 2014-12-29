@@ -7,6 +7,7 @@ import pt.rikmartins.utilitarios.noticias.SitioNoticias;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -59,7 +60,7 @@ public class SitioNoticiasClubeMG extends SitioNoticias {
 //                    <div class="clear"></div>
 //                    <div class="thumbwrap">
 //                        <div class="itx-featured">
-//                        <div class="ui-widget-header cont"><a href="http://www.montanhismo-guarda.pt/portal/?p=1504"><img src="http://www.montanhismo-guarda.pt/portal/wp-content/uploads/2014/10/Invernal2014_CMG_V1_Medium-300x200.jpg" alt="Invernal de BTT Cidade da Guarda 2014" height="200"></a></div>				</div>
+//                        <div class="ui-widget-header cont"><a href="http://www.montanhismo-guarda.pt/portal/?p=1504"><img src="http://www.montanhismo-guarda.pt/portal/wp-content/uploads/2014/10/teste_retrato-300x200.jpg" alt="Invernal de BTT Cidade da Guarda 2014" height="200"></a></div>				</div>
 //                    </div>
 //                    <div class="entry">
 //                        <p>Está aí mais uma edição da Invernal de BTT. Mais informações em www.montanhismo-guarda.pt/invernalbtt e em www.facebook.com/invernalbtt</p>
@@ -134,5 +135,22 @@ public class SitioNoticiasClubeMG extends SitioNoticias {
         public URL getEnderecoImagemGrande() {
             return enderecoImagemGrande;
         }
+
+        public String getEtiquetasAsString(String separador){
+            StringBuilder resultado = new StringBuilder();
+
+            Iterator<String> iterator = etiquetas.iterator();
+            while (iterator.hasNext()) {
+                resultado.append(iterator.next());
+                if (iterator.hasNext()) resultado.append(separador);
+            }
+            return resultado.toString();
+        }
+
+        public String getEtiquetasAsString(){
+            return getEtiquetasAsString(","); // Padrão
+        }
+
     }
+
 }

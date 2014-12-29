@@ -29,15 +29,8 @@ public abstract class SitioNoticias {
         this.categorias = new HashSet<String>();
     }
 
-    private static Document obterPagina(URL endereco) {
-        Document pagina;
-        try {
-            pagina = Jsoup.connect(endereco.toExternalForm()).get();
-        } catch (IOException e) {
-            e.printStackTrace();
-            pagina = null;
-        }
-        return pagina;
+    private static Document obterPagina(URL endereco) throws IOException {
+        return Jsoup.connect(endereco.toExternalForm()).get();
     }
 
     /**
@@ -59,7 +52,7 @@ public abstract class SitioNoticias {
 
     public abstract URL getEnderecoOriginal();
 
-    public boolean actualizarNoticias() {
+    public boolean actualizarNoticias() throws IOException {
         Document pagina = obterPagina(getEndereco());
         if (pagina == null) return false;
 
