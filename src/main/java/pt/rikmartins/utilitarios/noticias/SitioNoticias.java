@@ -86,7 +86,7 @@ public abstract class SitioNoticias {
     protected final void adicionarNoticia(Noticia noticia) {
         this.noticias.add(noticia);
         this.etiquetas.addAll(noticia.etiquetas);
-        this.categorias.add(noticia.categoria);
+        this.categorias.addAll(noticia.categorias);
     }
 
     public final void removerNoticia(Noticia noticia) {
@@ -129,12 +129,13 @@ public abstract class SitioNoticias {
         protected URL         enderecoNoticia;
         protected URL         enderecoImagem;
         protected Set<String> etiquetas;
-        protected String      categoria;
+        protected Set<String> categorias;
         protected boolean     destacada;
 
         public Noticia(Element elemento, SitioNoticias sitioNoticias) {
             this.sitioNoticias = sitioNoticias;
             this.etiquetas = new HashSet<String>();
+            this.categorias = new HashSet<String>();
             this.destacada = false;
             preparaNoticia(elemento);
         }
@@ -177,8 +178,8 @@ public abstract class SitioNoticias {
             return etiquetas;
         }
 
-        public final String getCategoria() {
-            return categoria;
+        public final Set<String> getCategorias() {
+            return categorias;
         }
 
         public final boolean isDestacada() {
